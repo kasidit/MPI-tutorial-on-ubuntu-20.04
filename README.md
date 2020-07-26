@@ -6,16 +6,84 @@
 <p><p>
 There are two networks that the VMs use. First, it use a primary network (ens3) to communicate to the Internet. Iassume you know how to set up brige network for QEMU VMs. 
 <p><p>
-The second network is a local network that we will use for MPI communication. I use openvswitch to create a virtual switch called "br-int" below. Note that the "host$" represents the shell command line prompt string of the host computer. 
+The second network is a local network that we will use for MPI communication. I use openvswitch to create a virtual switch called "br-int" below. Note that the "kasidit@flyvm:~$" represents the shell command line prompt of the host computer. 
 <pre>
-host$ sudo apt install openvswitch-switch
-host$ sudo ovs-vsctl add-br br-int
-host$ sudo ovs-vsctl add-port br-int gw1 -- set interface gw1 type=internal
+kasidit@flyvm:~$ sudo apt install openvswitch-switch
+kasidit@flyvm:~$ sudo ovs-vsctl add-br br-int
+kasidit@flyvm:~$ sudo ovs-vsctl add-port br-int gw1 -- set interface gw1 type=internal
 </pre>
-
+The gw1 interface is used by the host to connect to the VMs that will be in this internal LAN. 
+I do the following to set its IP address to 10.1.0.1/24.
+First, make sure network is not managed by cloud-init. 
+<pre>
+kasidit@flyvm:~$ cat /etc/cloud/cloud.cfg.d/subiquity-disable-cloudinit-networking.cfg
+network: {config: disabled}
+</pre>
+Then, I check if the gw1 interface exist. 
+<pre>
+kasidit@flyvm:~$ ip add show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+<snip>
+5: gw1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default qlen 1000
+    link/ether ce:8a:10:00:e7:9d brd ff:ff:ff:ff:ff:ff
+<snip>
+</pre>
+Now, I edit netplan's network interface configuration file, and apply the new configuration. Note that gw1 and its address are addes as highlighted. 
+<pre>
+kasidit@flyvm:~$ sudo vi /etc/netplan/00-installer-config.yaml
+kasidit@flyvm:~$ cat /etc/netplan/00-installer-config.yaml
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    eno1:
+      dhcp4: false
+ <b>gw1: 
+      addresses: [10.1.0.1/24]</b>
+  bridges:
+    br0:
+      interfaces: [ eno1 ] 
+      parameters: 
+        stp: true
+        forward-delay: 0
+      dhcp4: true
+  version: 2
+kasidit@flyvm:~$ sudo netplan apply
+</pre>
+Finally, I check if gw1 has the IP I wanted using the following commands. 
+<pre>
+kasidit@flyvm:~$ ip add show
+<snip>
+5: gw1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/ether ce:8a:10:00:e7:9d brd ff:ff:ff:ff:ff:ff
+    inet 10.1.0.1/24 brd 10.1.0.255 scope global gw1
+       valid_lft forever preferred_lft forever
+    inet6 fe80::cc8a:10ff:fe00:e79d/64 scope link 
+       valid_lft forever preferred_lft forever
+<snip>
+kasidit@flyvm:~$ ip route show
+default via 192.168.1.1 dev br0 proto dhcp src 192.168.1.35 metric 100 
+10.1.0.0/24 dev gw1 proto kernel scope link src 10.1.0.1 
+<snip>
+kasidit@flyvm:~$ 
+</pre>
+Now, I am going to use ovs-vsctl command to check openvswitch configuration of the host.
+<pre>
+kasidit@flyvm:~$ sudo ovs-vsctl show
+45428e03-a95f-4652-81a5-017a59e669e2
+    Bridge br-int
+        Port br-int
+            Interface br-int
+                type: internal
+        Port gw1
+            Interface gw1
+                type: internal
+    ovs_version: "2.13.0"
+kasidit@flyvm:~$ 
+</pre>
 <h4>Virtual Machines</h4>
 <p><p>
-  The hypervisor I used to create VMs is QEMU-KVM. I have downloaded th source code of the software and compile them on a user-defined directory. You can see the script be low for more details of both VMs. 
+Next, I am going to create script files to run VMs on the host. The hypervisor I used to create VMs is QEMU-KVM. I have downloaded th source code of the software and compile them on the /home/kasidit/qemu-kvm/bin directory. You can see the script be low for more details of both VMs. I use the word "trail" since it's kind of like the path I take exploring a jungle. 
  <p><p>
 vm01: <br>
 <pre>
