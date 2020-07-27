@@ -188,5 +188,8 @@ switch='br-int'
 ovs-vsctl add-port ${switch} $1
 $ 
 </pre>
-Next, I launched both VMs. The original network setup of the VMs use dhcp which I don't like cos IP address may change when I lofin next time. Also, since I am going to use the fist NIC for NFS between the VMs, those IP addresses on the first NIC should be static. Supposed the IP address of the ens3 nic of vm01 and vm02 are 192.168.1.221 and 192.168.1.222, and the IP addresses of the ens4 nic of the vms are 10.0.1.221 and 10.0.1.222, respectively.
+Next, I launched both VMs. The original network setup of the VMs use dhcp which I don't like cos IP address may change when I lofin next time. Also, since I am going to use the fist NIC for NFS between the VMs, those IP addresses on the first NIC should be static. Supposed the IP address of the ens3 nic of vm01 and vm02 are 192.168.1.221 and 192.168.1.222, and the IP addresses of the ens4 nic of the vms are 10.0.1.221 and 10.0.1.222, respectively. I will just show what I did on VM02 below. 
+<pre>
+
+</pre>
 
