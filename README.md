@@ -220,3 +220,25 @@ vm02$ sudo netplan apply
 vm02$ ifconfig
 </pre>
 Now that we have the IP addresses set. I will install NFS where vm02 is the NFS server and vm01 is the client. 
+<p>
+on VM02 (nfs server): <br>
+<pre>
+vm02$ sudo apt update
+vm02$ sudo apt install nfs-kernel-server
+kasidit@vm02:~$ sudo mkdir /srv/nfs
+kasidit@vm02:~$ sudo vi /etc/exports
+kasidit@vm02:~$ cat /etc/exports
+# /etc/exports: the access control list for filesystems which may be exported
+#		to NFS clients.  See exports(5).
+#
+# Example for NFSv2 and NFSv3:
+# /srv/homes       hostname1(rw,sync,no_subtree_check) hostname2(ro,sync,no_subtree_check)
+#
+# Example for NFSv4:
+# /srv/nfs4        gss/krb5i(rw,sync,fsid=0,crossmnt,no_subtree_check)
+# /srv/nfs4/homes  gss/krb5i(rw,sync,no_subtree_check)
+#
+/srv/nfs 192.168.1.221(rw,sync,no_root_squash,no_subtree_check)
+kasidit@vm02:~$ sudo mkdir /srv/nfs
+
+</pre>
