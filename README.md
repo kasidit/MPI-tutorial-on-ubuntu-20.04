@@ -225,9 +225,9 @@ on VM02 (nfs server): <br>
 <pre>
 vm02$ sudo apt update
 vm02$ sudo apt install nfs-kernel-server
-kasidit@vm02:~$ sudo mkdir /srv/nfs
-kasidit@vm02:~$ sudo vi /etc/exports
-kasidit@vm02:~$ cat /etc/exports
+vm02$ sudo mkdir /srv/nfs
+vm02$ sudo vi /etc/exports
+vm02$ cat /etc/exports
 # /etc/exports: the access control list for filesystems which may be exported
 #		to NFS clients.  See exports(5).
 #
@@ -239,6 +239,43 @@ kasidit@vm02:~$ cat /etc/exports
 # /srv/nfs4/homes  gss/krb5i(rw,sync,no_subtree_check)
 #
 /srv/nfs 192.168.1.221(rw,sync,no_root_squash,no_subtree_check)
-kasidit@vm02:~$ sudo mkdir /srv/nfs
+vm02$ 
+vm02$ sudo systemctl restart nfs-kernel-server
+vm02$ sudo ufw allow from 192.168.1.221 to any port nfs
+vm02$ sudo ufw status
+</pre>
+on VM01 (nfs client): <br>
+<pre>
+sudo apt update
+sudo apt install nfs-common
+kasidit@vm01:~$ sudo mkdir -p /srv/nfs
+kasidit@vm01:~$ sudo mount 192.168.1.222:/srv/nfs /srv/nfs
+kasidit@vm01:~$ 
+kasidit@vm01:~$ 
+kasidit@vm01:~$ df -h
+Filesystem              Size  Used Avail Use% Mounted on
+udev                    4.9G     0  4.9G   0% /dev
+tmpfs                   997M  1.2M  996M   1% /run
+/dev/sda2               148G   33G  109G  24% /
+tmpfs                   4.9G     0  4.9G   0% /dev/shm
+tmpfs                   5.0M     0  5.0M   0% /run/lock
+tmpfs                   4.9G     0  4.9G   0% /sys/fs/cgroup
+/dev/loop0               55M   55M     0 100% /snap/core18/1754
+/dev/loop3               72M   72M     0 100% /snap/lxd/16100
+/dev/loop2               72M   72M     0 100% /snap/lxd/16044
+/dev/loop1               55M   55M     0 100% /snap/core18/1880
+/dev/loop4               30M   30M     0 100% /snap/snapd/8542
+/dev/loop5               30M   30M     0 100% /snap/snapd/8140
+tmpfs                   997M   16K  997M   1% /run/user/122
+tmpfs                   997M  4.0K  997M   1% /run/user/1000
+192.168.1.222:/srv/nfs   49G  6.3G   40G  14% /srv/nfs
+$
+kasidit@vm01:~$ du -s /srv/nfs
+4	/srv/nfs
+kasidit@vm01:~$ 
+kasidit@vm01:~$ sudo touch /srv/nfs/kasidit
+kasidit@vm01:~$ ls -l /srv/nfs/kasidit
+-rw-r--r-- 1 root root 0 Jul 27 11:24 /srv/nfs/kasidit
 
 </pre>
+
