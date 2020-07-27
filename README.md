@@ -6,6 +6,7 @@ internet
    |
    |  host
 +-------------------------------------------+
+| ens3                                      |
 |  |                                        |
 |  br0 --------- vm01 ---------- br-int     |
 |  |                               |        |
@@ -15,7 +16,7 @@ internet
 <p><p>
 <h4>Network</h4>
 <p><p>
-There are two networks that the VMs use. First, it use a primary network (ens3) to communicate to the Internet. Iassume you know how to set up brige network for QEMU VMs. 
+There are two networks that the VMs use. The VM use its first NIC to access internet. It connect TAP NIC to br0, a linux bridge I created that in turn connect to the physical NIC of the host (ens3). I assume you know how to set up a brige network for QEMU VMs. 
 <p><p>
 The second network is a local network that we will use for MPI communication. I use openvswitch to create a virtual switch called "br-int" below. Note that the "$" represents the shell command line prompt of the host computer. 
 <pre>
