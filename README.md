@@ -190,6 +190,33 @@ $
 </pre>
 Next, I launched both VMs. The original network setup of the VMs use dhcp which I don't like cos IP address may change when I lofin next time. Also, since I am going to use the fist NIC for NFS between the VMs, those IP addresses on the first NIC should be static. Supposed the IP address of the ens3 nic of vm01 and vm02 are 192.168.1.221 and 192.168.1.222, and the IP addresses of the ens4 nic of the vms are 10.0.1.221 and 10.0.1.222, respectively. I will just show what I did on VM02 below. 
 <pre>
-
+vm02$ cat /etc/cloud/cloud.cfg.d/subiquity-disable-cloudinit-networking.cfg
+network: {config: disabled}
+vm02$ ip link
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: ens3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 00:71:50:00:01:85 brd ff:ff:ff:ff:ff:ff
+3: ens4: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ether 00:71:50:00:02:85 brd ff:ff:ff:ff:ff:ff
+vm02$ 
+vm02$ 
+vm02$ sudo vi /etc/netplan/00-installer-config.yaml
+vm02$ 
+vm02$ 
+vm02$ cat /etc/netplan/00-installer-config.yaml
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    ens3:
+      addresses: [192.168.1.222/24]
+      gateway4: 192.168.1.1
+      nameservers: 
+        addresses: [8.8.8.8]
+    ens4:
+      addresses: [10.0.1.222/24]
+  version: 2
+vm02$ sudo netplan apply
+vm02$ ifconfig
 </pre>
 
