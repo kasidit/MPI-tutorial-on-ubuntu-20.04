@@ -6,7 +6,7 @@ internet
    |
    |  host
 +-------------------------------------------+
-| ens3                                      |
+| eno1                                      |
 |  |                                        |
 |  br0 --------- vm01 ---------- br-int     |
 |  |                               |        |
@@ -16,7 +16,7 @@ internet
 <p><p>
 <h4>Network</h4>
 <p><p>
-There are two networks that the VMs use. The VM use its first NIC to access internet. It connect TAP NIC to br0, a linux bridge I created that in turn connect to the physical NIC of the host (ens3). I assume you know how to set up a brige network for QEMU VMs. 
+There are two networks that the VMs use. The VM use its first NIC to access internet. It connect TAP NIC to br0, a linux bridge I created that in turn connect to the physical NIC of the host (eno1). I assume you know how to set up a brige network for QEMU VMs. 
 <p><p>
 The second network is a local network that we will use for MPI communication. I use openvswitch to create a virtual switch called "br-int" below. Note that the "$" represents the shell command line prompt of the host computer. 
 <pre>
@@ -158,7 +158,34 @@ sudo ${exeloc}/qemu-system-x86_64 \
      -monitor tcp::7557,server,nowait \
      -netdev type=tap,script=${etcloc}/qemu-ifup,downscript=${etcloc}/qemu-ifdown,id=hostnet1 \
      -device virtio-net-pci,romfile=,netdev=hostnet1,mac=00:71:50:00:01:85 \
+     -netdev type=tap,script=${etcloc}/ovs-ifup,downscript=${etcloc}/ovs-ifdown,id=hostnet2 \
+     -device virtio-net-pci,romfile=,netdev=hostnet2,mac=00:71:50:00:02:85 \
      -rtc base=localtime,clock=vm 
 
+</pre>
+<p>
+  Here are the *-ifup and *-ifdown scripts. 
+<pre>
+$ cat qemu-ifup
+#!/bin/sh
+switch=br0
+/sbin/ifconfig $1 0.0.0.0 promisc up
+/sbin/brctl addif ${switch} $1
+$ cat qemu-ifdown
+#!/bin/sh
+switch=br0
+/sbin/ifconfig $1 down
+/sbin/brctl delif ${switch} $1
+$ cat ovs-ifdown
+#!/bin/sh
+switch='br-int'
+/sbin/ifconfig $1 0.0.0.0 down
+ovs-vsctl del-port ${switch} $1
+$ cat ovs-ifup
+#!/bin/sh
+switch='br-int'
+/sbin/ifconfig $1 0.0.0.0 up
+ovs-vsctl add-port ${switch} $1
+$ 
 </pre>
 
