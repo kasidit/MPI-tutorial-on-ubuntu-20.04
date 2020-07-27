@@ -1,6 +1,17 @@
 # MPI-tutorial-on-ubuntu-20.04
 <p><p>
-  This tutorial contains my personal notes on using MPI on Ubuntu 20.04. I have an ubuntu 20.04 host computer and I am going to run two virtual machines (VMs), namely vm01 and vm02, on it. Each VM has two NICs. The first NIC connects the VM to internet, while the other one connects it to a local network, implemented using an openvswitch bridge. 
+  This tutorial contains my personal notes on using MPI on Ubuntu 20.04. I have an ubuntu 20.04 host computer and I am going to run two virtual machines (VMs), namely vm01 and vm02, on it. Each VM has two NICs. The first NIC connects the VM to internet, while the other one connects it to a local network, implemented using an openvswitch bridge. This is how it gonna look like. 
+<pre>
+internet 
+   |
+   |  host
++-------------------------------------------+
+|  |                                        |
+|  br0 --------- vm01 ---------- br-int     |
+|  |                               |        |
+|  +-------------vm02 -------------+        |
++-------------------------------------------+
+</pre>
 <p><p>
 <h4>Network</h4>
 <p><p>
