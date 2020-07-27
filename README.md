@@ -126,6 +126,8 @@ sudo ${exeloc}/qemu-system-x86_64 \
      -monitor tcp::6559,server,nowait \
      -netdev type=tap,script=${etcloc}/qemu-ifup,downscript=${etcloc}/qemu-ifdown,id=hostnet1 \
      -device virtio-net-pci,romfile=,netdev=hostnet1,mac=00:81:50:00:01:95 \
+     -netdev type=tap,script=${etcloc}/ovs-ifup,downscript=${etcloc}/ovs-ifdown,id=hostnet2 \
+     -device virtio-net-pci,romfile=,netdev=hostnet2,mac=00:81:50:00:02:95 \
      -rtc base=localtime,clock=vm 
 </pre>
 <p><p>
