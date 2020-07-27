@@ -219,4 +219,4 @@ network:
 vm02$ sudo netplan apply
 vm02$ ifconfig
 </pre>
-
+Now that we have the IP addresses set. I will install NFS where vm02 is the NFS server and vm01 is the client. 
