@@ -16,7 +16,25 @@ internet
 <p><p>
 <h4>Network</h4>
 <p><p>
-There are two networks that the VMs use. The VM use its first NIC to access internet. It connect TAP NIC to br0, a linux bridge I created that in turn connect to the physical NIC of the host (eno1). I assume you know how to set up a brige network for QEMU VMs. 
+There are two networks that the VMs use. The VM use its first NIC to access internet. It connect TAP NIC to br0, a linux bridge I created that in turn connect to the physical NIC of the host (eno1). 
+<p><p>
+  Referring to <a href="https://levelup.gitconnected.com/how-to-setup-bridge-networking-with-kvm-on-ubuntu-20-04-9c560b3e3991">this tutorial</a>, I do the followings. First, I download QEMU-KVM and linux bridge using the following command. 
+<pre>
+$ sudo apt install qemu-kvm bridge-utils
+</pre>
+I will also disable netfilter on bridge network for performance and then reboot. (optional). 
+<pre>
+$ sudo vi /etc/sysctl.d/bridge.conf
+$ cat /etc/sysctl.d/bridge.conf
+net.bridge.bridge-nf-call-ip6tables=0
+net.bridge.bridge-nf-call-iptables=0
+net.bridge.bridge-nf-call-arptables=0
+$ sudo vi /etc/udev/rules.d/99-bridge.rules
+$ cat /etc/udev/rules.d/99-bridge.rules
+ACTION=="add", SUBSYSTEM=="module", KERNEL=="br_netfilter", RUN+="/sbin/sysctl -p /etc/sysctl.d/bridge.conf"
+$ sudo reboot
+</pre>
+
 <p><p>
 The second network is a local network that we will use for MPI communication. I use openvswitch to create a virtual switch called "br-int" below. Note that the "$" represents the shell command line prompt of the host computer. 
 <pre>
