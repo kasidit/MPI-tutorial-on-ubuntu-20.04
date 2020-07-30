@@ -34,7 +34,37 @@ $ cat /etc/udev/rules.d/99-bridge.rules
 ACTION=="add", SUBSYSTEM=="module", KERNEL=="br_netfilter", RUN+="/sbin/sysctl -p /etc/sysctl.d/bridge.conf"
 $ sudo reboot
 </pre>
-
+After reboot, I will configure a static IP address on the "br0" bridge network below and reboot again.
+Actaully, reboot is not required. Applying netplan new new configuration suffices.  
+<pre>
+$ sudo apt install netplan
+$ sudo mkdir /etc/netplan
+$ sudo vi /etc/netplan/00-installer-config.yaml
+$ sudo cat 
+$ sudo cat /etc/netplan/00-installer-config.yaml
+network:
+  ethernets:
+    enp6s0:
+      dhcp4: false
+      dhcp6: false
+  bridges:
+    br0:
+      interfaces: [ enp6s0 ]
+      addresses: [10.100.20.181/24]
+      gateway4: 10.100.20.1
+      mtu: 1500
+      nameservers:
+        addresses: [8.8.8.8,8.8.4.4]
+      parameters:
+        stp: true
+        forward-delay: 0
+      dhcp4: false
+      dhcp6: false
+  version: 2
+$ 
+$ sudo netplan apply
+$ sudo reboot # optional
+</pre>
 <p><p>
 The second network is a local network that we will use for MPI communication. I use openvswitch to create a virtual switch called "br-int" below. Note that the "$" represents the shell command line prompt of the host computer. 
 <pre>
