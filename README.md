@@ -14,9 +14,11 @@ internet
 +-------------------------------------------+
 </pre>
 <p><p>
-<h4>Network</h4>
+<h2>1. Networking on a host computer</h2>
 <p><p>
 There are two networks that the VMs use. The VM use its first NIC to access internet. It connect TAP NIC to br0, a linux bridge I created that in turn connect to the physical NIC of the host (eno1). 
+<p>
+<h4>1.1. A bridge network for accessing Internet</h4>
 <p><p>
   Referring to <a href="https://levelup.gitconnected.com/how-to-setup-bridge-networking-with-kvm-on-ubuntu-20-04-9c560b3e3991">this tutorial</a>, I do the followings. First, I download QEMU-KVM and linux bridge using the following command. 
 <pre>
@@ -65,6 +67,9 @@ $
 $ sudo netplan apply
 $ sudo reboot # optional
 </pre>
+Network configuration for the VM will be described in the next section. 
+<p>
+<h4>1.2. A local network for communication among VMs</h4>
 <p><p>
 The second network is a local network that we will use for MPI communication. I use openvswitch to create a virtual switch called "br-int" below. Note that the "$" represents the shell command line prompt of the host computer. 
 <pre>
@@ -141,7 +146,7 @@ $ sudo ovs-vsctl show
     ovs_version: "2.13.0"
 $ 
 </pre>
-<h4>Virtual Machines</h4>
+<h2>2. Virtual Machines</h2>
 <p><p>
 Next, I am going to create script files to run VMs on the host. The hypervisor I used to create VMs is QEMU-KVM. I have downloaded th source code of the software and compile them on the /home/kasidit/qemu-kvm/bin directory. You can see the script be low for more details of both VMs. I use the word "trail" cos it's kinda like the path I take exploring a jungle. 
  <p>
@@ -275,7 +280,9 @@ network:
 vm02$ sudo netplan apply
 vm02$ ifconfig
 </pre>
-Now that we have the IP addresses set. I will install NFS where vm02 is the NFS server and vm01 is the client. 
+<h2>3. Install NFS</h2>
+<p><p>
+Now that we have the IP addresses setup. I will install NFS where vm02 is the NFS server and vm01 is the client. 
 <p>
 on VM02 (nfs server): <br>
 <pre>
