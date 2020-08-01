@@ -342,7 +342,7 @@ vm01$ ls -l /srv/nfs/kasidit
 vm01$
 </pre>
 Next I will modify /etc/ftab to activate nfs client everytime vm01 is rebooted. 
-So, here I set vm01 to be an NFS client and vm02 to be the server. 
+Remind that 192.168.1.222 is the IP address of vm02. 
 <pre>
 vm01$ sudo vi /etc/fstab
 vm01$ cat /etc/fstab
