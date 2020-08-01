@@ -36,10 +36,10 @@ Then, I check if the gw1 interface exist.
 $ ip add show
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-<snip>
+--snip--
 5: gw1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default qlen 1000
     link/ether ce:8a:10:00:e7:9d brd ff:ff:ff:ff:ff:ff
-<snip>
+--snip--
 </pre>
 Now, I edit netplan's network interface configuration file, and apply the new configuration. Note that gw1 and its address are addes as highlighted. 
 <pre>
@@ -65,18 +65,18 @@ $ sudo netplan apply
 Finally, I check if gw1 has the IP I wanted using the following commands. 
 <pre>
 $ ip add show
-<snip>
+--snip--
 5: gw1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default qlen 1000
     link/ether ce:8a:10:00:e7:9d brd ff:ff:ff:ff:ff:ff
     inet 10.1.0.1/24 brd 10.1.0.255 scope global gw1
        valid_lft forever preferred_lft forever
     inet6 fe80::cc8a:10ff:fe00:e79d/64 scope link 
        valid_lft forever preferred_lft forever
-<snip>
+--snip--
 $ ip route show
 default via 192.168.1.1 dev br0 proto dhcp src 192.168.1.35 metric 100 
 10.1.0.0/24 dev gw1 proto kernel scope link src 10.1.0.1 
-<snip>
+--snip--
 $ 
 </pre>
 Now, I am going to use ovs-vsctl command to check openvswitch configuration of the host.
@@ -101,6 +101,7 @@ The first interface in the script below use qemu-ifup and qemu-ifdown scripts to
  <p>
 vm01: <br>
 <pre>
+$ cat runQemu-vm01-img.sh
 #!/bin/bash
 numsmp="4"
 memsize="10G"
@@ -129,10 +130,12 @@ sudo ${exeloc}/qemu-system-x86_64 \
      -netdev type=tap,script=${etcloc}/ovs-ifup,downscript=${etcloc}/ovs-ifdown,id=hostnet2 \
      -device virtio-net-pci,romfile=,netdev=hostnet2,mac=00:81:50:00:02:95 \
      -rtc base=localtime,clock=vm 
+$
 </pre>
 <p><p>
 vm02: <br>
 <pre>
+$ cat runQemu-vm02-img.sh
 #!/bin/bash
 numsmp="4"
 memsize="6G"
@@ -161,10 +164,10 @@ sudo ${exeloc}/qemu-system-x86_64 \
      -netdev type=tap,script=${etcloc}/ovs-ifup,downscript=${etcloc}/ovs-ifdown,id=hostnet2 \
      -device virtio-net-pci,romfile=,netdev=hostnet2,mac=00:71:50:00:02:85 \
      -rtc base=localtime,clock=vm 
-
+$
 </pre>
 <p>
-  Here are the *-ifup and *-ifdown scripts. 
+  Here are the *-ifup and *-ifdown scripts. NOte that the location of these scripts are as describd in the scripts. However, you may put it wherever you want.  
 <pre>
 $ cat qemu-ifup
 #!/bin/sh
@@ -188,7 +191,12 @@ switch='br-int'
 ovs-vsctl add-port ${switch} $1
 $ 
 </pre>
-Next, I launched both VMs. The original network setup of the VMs use dhcp which I don't like cos IP address may change when I lofin next time. Also, since I am going to use the fist NIC for NFS between the VMs, those IP addresses on the first NIC should be static. Supposed the IP address of the ens3 nic of vm01 and vm02 are 192.168.1.221 and 192.168.1.222, and the IP addresses of the ens4 nic of the vms are 10.0.1.221 and 10.0.1.222, respectively. I will just show what I did on VM02 below. 
+Next, I launched both VMs. 
+<pre>
+$ runQemu-vm01-img.sh &
+$ runQemu-vm02-img.sh &
+</pre> 
+The original network setup of the VMs use dhcp which I don't like cos IP address may change when I lofin next time. Also, since I am going to use the fist NIC for NFS between the VMs, those IP addresses on the first NIC should be static. Supposed the IP address of the ens3 nic of vm01 and vm02 are 192.168.1.221 and 192.168.1.222, and the IP addresses of the ens4 nic of the vms are 10.0.1.221 and 10.0.1.222, respectively. I will just show what I did on VM02 below. 
 <pre>
 vm02$ cat /etc/cloud/cloud.cfg.d/subiquity-disable-cloudinit-networking.cfg
 network: {config: disabled}
@@ -246,13 +254,13 @@ vm02$ sudo ufw status
 </pre>
 on VM01 (nfs client): <br>
 <pre>
-sudo apt update
-sudo apt install nfs-common
-kasidit@vm01:~$ sudo mkdir -p /srv/nfs
-kasidit@vm01:~$ sudo mount 192.168.1.222:/srv/nfs /srv/nfs
-kasidit@vm01:~$ 
-kasidit@vm01:~$ 
-kasidit@vm01:~$ df -h
+vm01$ sudo apt update
+vm01$ sudo apt install nfs-common
+vm01$ sudo mkdir -p /srv/nfs
+vm01$ sudo mount 192.168.1.222:/srv/nfs /srv/nfs
+vm01$ 
+vm01$ 
+vm01$ df -h
 Filesystem              Size  Used Avail Use% Mounted on
 udev                    4.9G     0  4.9G   0% /dev
 tmpfs                   997M  1.2M  996M   1% /run
@@ -270,12 +278,30 @@ tmpfs                   997M   16K  997M   1% /run/user/122
 tmpfs                   997M  4.0K  997M   1% /run/user/1000
 192.168.1.222:/srv/nfs   49G  6.3G   40G  14% /srv/nfs
 $
-kasidit@vm01:~$ du -s /srv/nfs
+vm01$ du -s /srv/nfs
 4	/srv/nfs
-kasidit@vm01:~$ 
-kasidit@vm01:~$ sudo touch /srv/nfs/kasidit
-kasidit@vm01:~$ ls -l /srv/nfs/kasidit
+vm01$ 
+vm01$ sudo touch /srv/nfs/kasidit
+vm01$ ls -l /srv/nfs/kasidit
 -rw-r--r-- 1 root root 0 Jul 27 11:24 /srv/nfs/kasidit
-
+vm01$
 </pre>
-
+Next I will modify /etc/ftab to activate nfs client everytime vm01 is rebooted. 
+So, here I set vm01 to be an NFS client and vm02 to be the server. 
+<pre>
+vm01$ sudo vi /etc/fstab
+vm01$ cat /etc/fstab
+# /etc/fstab: static file system information.
+#
+# Use 'blkid' to print the universally unique identifier for a
+# device; this may be used with UUID= as a more robust way to name devices
+# that works even if disks are added and removed. See fstab(5).
+#
+# <file system> <mount point>   <type>  <options>       <dump>  <pass>
+# / was on /dev/sda2 during curtin installation
+/dev/disk/by-uuid/465fdf1a-e858-4139-a8c1-e3c6d7962faf / ext4 defaults 0 0
+/swap.img	none	swap	sw	0	0
+192.168.1.222:/srv/nfs       /srv/nfs      nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
+vm01$ 
+vm01$ sudo reboot
+</pre>
