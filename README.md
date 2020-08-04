@@ -341,26 +341,18 @@ Defaults	env_reset
 Defaults	mail_badpass
 Defaults	secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin"
 
-# Host alias specification
-
-# User alias specification
-
-# Cmnd alias specification
-
-# User privilege specification
+\# User privilege specification
 root	ALL=(ALL:ALL) ALL
 
-# Members of the admin group may gain root privileges
+\# Members of the admin group may gain root privileges
 %admin ALL=(ALL) ALL
 
-# Allow members of group sudo to execute any command
+\# Allow members of group sudo to execute any command
 %sudo	ALL=(ALL:ALL) ALL
 kasidit	ALL=(ALL) NOPASSWD:ALL
 mpiu0	ALL=(ALL) NOPASSWD:ALL
 
-# See sudoers(5) for more information on "#include" directives:
-
-#includedir /etc/sudoers.d
+\#includedir /etc/sudoers.d
 vm0x$ 
 </pre>
 <p><p>
