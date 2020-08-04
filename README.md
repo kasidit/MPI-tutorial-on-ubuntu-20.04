@@ -504,4 +504,85 @@ mpiu0@vm02:~$ ls -l mpidev/testfile
 -rw-rw-r-- 1 mpiu0 mpiu0 0 Aug  4 09:27 mpidev/testfile
 mpiu0@vm02:~$ 
 </pre>
-Then, nfs is ok. 
+If the above work, nfs is ok.
+<h2>4. Install MPI</h2>
+<p><p>
+I use the following commands to install MPICH on both VMs.
+<p>
+On vm01 and vm02: <br>
+<pre>
+vm0x$ su - mpiu0
+Password:
+mpiu0@vm0x:~$
+mpiu0@vm0x:~$ sudo apt install mpich
+</pre>
+On vm02:<br>
+<pre>
+mpiu0@vm02:~$ ls
+mpidev
+mpiu0@vm02:~$
+mpiu0@vm02:~$ git clone https://github.com/kasidit/MPI-tutorial-on-ubuntu-20.04
+Cloning into 'MPI-tutorial-on-ubuntu-20.04'...
+remote: Enumerating objects: 84, done.
+remote: Counting objects: 100% (84/84), done.
+remote: Compressing objects: 100% (51/51), done.
+remote: Total 84 (delta 25), reused 33 (delta 9), pack-reused 0
+Unpacking objects: 100% (84/84), 25.75 KiB | 107.00 KiB/s, done.
+mpiu0@vm02:~$ ls
+MPI-tutorial-on-ubuntu-20.04  mpidev
+mpiu0@vm02:~$ cd MPI-tutorial-on-ubuntu-20.04/
+mpiu0@vm02:~/MPI-tutorial-on-ubuntu-20.04$ ls
+README.md  mpispawnexample
+mpiu0@vm02:~/MPI-tutorial-on-ubuntu-20.04$
+mpiu0@vm02:~/MPI-tutorial-on-ubuntu-20.04$ mv mpispawnexample ../mpidev
+mpiu0@vm02:~/MPI-tutorial-on-ubuntu-20.04$
+mpiu0@vm02:~/MPI-tutorial-on-ubuntu-20.04$ cd ../mpidev
+mpiu0@vm02:~/mpidev$
+mpiu0@vm02:~/mpidev$ ls
+mpispawnexample  testfile
+mpiu0@vm02:~/mpidev$
+</pre>
+On vm01: <br>
+<pre>
+mpiu0@vm01:~$ cd mpidev/mpispawnexample
+mpiu0@vm01:~/mpidev/mpispawnexample$ 
+mpiu0@vm01:~/mpidev/mpispawnexample$ ls
+hostfile  Makefile.in        matvec-master-universe.f90  pcp-spawn-master.c  targets
+Makefile  matvec-master.f90  matvec-worker.f90           pcp-spawn-worker.c
+mpiu0@vm01:~/mpidev/mpispawnexample$ make pcp-spawn-worker
+mpicc  -o pcp-spawn-worker pcp-spawn-worker.c 
+mpiu0@vm01:~/mpidev/mpispawnexample$ ls
+hostfile  Makefile.in        matvec-master-universe.f90  pcp-spawn-master.c  pcp-spawn-worker.c
+Makefile  matvec-master.f90  matvec-worker.f90           pcp-spawn-worker    targets
+mpiu0@vm01:~/mpidev/mpispawnexample$ 
+</pre>
+On vm02: <br>
+<pre>
+mpiu0@vm02:~/mpidev$ cd mpispawnexample/
+mpiu0@vm02:~/mpidev/mpispawnexample$ 
+mpiu0@vm02:~/mpidev/mpispawnexample$ ls
+Makefile     hostfile                    matvec-master.f90  pcp-spawn-master.c  pcp-spawn-worker.c
+Makefile.in  matvec-master-universe.f90  matvec-worker.f90  pcp-spawn-worker    targets
+mpiu0@vm02:~/mpidev/mpispawnexample$ make pcp-spawn-master
+mpicc  -o pcp-spawn-master pcp-spawn-master.c 
+mpiu0@vm02:~/mpidev/mpispawnexample$ 
+mpiu0@vm02:~/mpidev/mpispawnexample$ cat hostfile
+10.0.1.222
+mpiu0@vm02:~/mpidev/mpispawnexample$ mpiexec -n 1 -f hostfile ./pcp-spawn-master 10.0.1.221 Makefile.in outputfile
+num = 2
+10.0.1.221
+0:1mpiu0@vm02:~/mpidev/mpispawnexample$ 
+mpiu0@vm02:~/mpidev/mpispawnexample$ ls
+Makefile     matvec-master-universe.f90  outputfile         pcp-spawn-master.c  targets
+Makefile.in  matvec-master.f90           outputfile.worker  pcp-spawn-worker
+hostfile     matvec-worker.f90           pcp-spawn-master   pcp-spawn-worker.c
+mpiu0@vm02:~/mpidev/mpispawnexample$ ls -l outputfile\*
+-rwx------ 1 mpiu0 mpiu0 652 Aug  4 12:26 outputfile
+-rwx------ 1 mpiu0 mpiu0 652 Aug  4 12:26 outputfile.worker
+mpiu0@vm02:~/mpidev/mpispawnexample$ ls -l Makefile.in
+-rw-rw-r-- 1 mpiu0 mpiu0 652 Aug  4 11:36 Makefile.in
+mpiu0@vm02:~/mpidev/mpispawnexample$ diff Makefile.in outputfile
+mpiu0@vm02:~/mpidev/mpispawnexample$ diff Makefile.in outputfile.worker 
+mpiu0@vm02:~/mpidev/mpispawnexample$ 
+</pre>
+This show MPI spawn a new process and run sucessfully. 
