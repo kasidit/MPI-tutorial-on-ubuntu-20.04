@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 printf("0:%d", num_hosts);
 fflush(stdout); 
     MPI_Info_set(hostinfo, "soft", soft_limit);
-    MPI_Comm_spawn("/home/mpiu0/mpidev/examples-advmpi/spawn/pcp-spawn-worker", MPI_ARGV_NULL, num_hosts,
+    MPI_Comm_spawn("/home/mpiu0/mpidev/mpispawnexample/pcp-spawn-worker", MPI_ARGV_NULL, num_hosts,
                    hostinfo, 0, MPI_COMM_SELF, &pcpworkers,
 		   MPI_ERRCODES_IGNORE);
     MPI_Info_free(&hostinfo);

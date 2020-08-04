@@ -16,7 +16,7 @@
 int main(int argc, char *argv[])
 {
     int      mystatus, allstatus, done, numread;
-    char     outfilename[MAXPATHLEN], controlmsg[CMDSIZE];
+    char     outfilename[MAXPATHLEN+sizeof(".worker")], controlmsg[CMDSIZE];
     char     tmpoutfilename[MAXPATHLEN];
     int      outfd;
     char     buf[BUFSIZE];
