@@ -280,17 +280,156 @@ network:
 vm02$ sudo netplan apply
 vm02$ ifconfig
 </pre>
+Do the same things for vm01. 
+<h2>3. Set up /etc/hosts and create MPI account</h2>
+<p><p>
+In this section, I am going to describe how to install MPICH on vm01 and vm02. First, I have
+to setup the /etc/hosts files on both vms. 
+<p>
+On vm01 and vm02: <br>
+<pre>
+vm0x$ sudo vi /etc/hosts
+vm0x$ cat /etc/hosts
+127.0.0.1 localhost
+#127.0.1.1 vm01
+
+10.0.1.221 vm01
+10.0.1.222 vm02
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+vm0x$ 
+</pre>
+Next, we will add a new user, namely "mpiu0", for both vms and enable superuser privilege. 
+<p>
+On vm01 and vm02: <br>
+<pre>
+vm0x:~$ sudo adduser mpiu0
+Adding user `mpiu0' ...
+Adding new group `mpiu0' (1001) ...
+Adding new user `mpiu0' (1001) with group `mpiu0' ...
+Creating home directory `/home/mpiu0' ...
+Copying files from `/etc/skel' ...
+New password: 
+Retype new password: 
+passwd: password updated successfully
+Changing the user information for mpiu0
+Enter the new value, or press ENTER for the default
+	Full Name []: 
+	Room Number []: 
+	Work Phone []: 
+	Home Phone []: 
+	Other []: 
+Is the information correct? [Y/n] y
+vm0x$ 
+vm0x$ sudo vi /etc/sudoers
+vm0x$ 
+vm0x$ sudo cat /etc/sudoers
+#
+# This file MUST be edited with the 'visudo' command as root.
+#
+# Please consider adding local content in /etc/sudoers.d/ instead of
+# directly modifying this file.
+#
+# See the man page for details on how to write a sudoers file.
+#
+Defaults	env_reset
+Defaults	mail_badpass
+Defaults	secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin"
+
+# Host alias specification
+
+# User alias specification
+
+# Cmnd alias specification
+
+# User privilege specification
+root	ALL=(ALL:ALL) ALL
+
+# Members of the admin group may gain root privileges
+%admin ALL=(ALL) ALL
+
+# Allow members of group sudo to execute any command
+%sudo	ALL=(ALL:ALL) ALL
+kasidit	ALL=(ALL) NOPASSWD:ALL
+mpiu0	ALL=(ALL) NOPASSWD:ALL
+
+# See sudoers(5) for more information on "#include" directives:
+
+#includedir /etc/sudoers.d
+vm0x$ 
+</pre>
+<p><p>
+I am goint to login to the mpiu0 account on both VMs and set up remote execution 
+capability using public/private keys. Since I am going to run an MPI program on 
+vm02 and then spawn a process on vm01, I will let vm01 be the server and vm02 be the client. 
+So, I will create keys using ssh-keygen on vm02 and copy them to vm01. 
+<p>
+On vm02: <br>
+<pre>
+vm02$ su - mpiu0
+Password: 
+mpiu0@vm02:~$ 
+mpiu0@vm02:~$ 
+mpiu0@vm02:~$ 
+mpiu0@vm02:~$ 
+mpiu0@vm02:~$ ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/mpiu0/.ssh/id_rsa): 
+Created directory '/home/mpiu0/.ssh'.
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /home/mpiu0/.ssh/id_rsa
+Your public key has been saved in /home/mpiu0/.ssh/id_rsa.pub
+The key fingerprint is:
+SHA256:YaS3VgRorBn8KCjlv3/IZLPgyLicwrAMe4w37M4pq78 mpiu0@vm02
+The key's randomart image is:
++---[RSA 3072]----+
+|   . . .o..      |
+|  . o +o .       |
+| +   B. + .      |
+|o o + .o +       |
+|.  o    S        |
+|o   o +.         |
+|=O o * +         |
+|O+X.o + .        |
++----[SHA256]-----+
+mpiu0@vm02:~$ 
+mpiu0@vm02:~$ ssh-copy-id vm01
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/mpiu0/.ssh/id_rsa.pub"
+The authenticity of host 'vm01 (10.0.1.221)' can't be established.
+ECDSA key fingerprint is SHA256:fpEWKzqdintalYplKXW36+y8Zu1NqQK0OyEzEFufrtw.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+mpiu0@vm01's password: 
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'vm01'"
+and check to make sure that only the key(s) you wanted were added.
+
+mpiu0@vm02:~$ 
+mpiu0@vm02:~$ ssh vm01 date
+Tue 04 Aug 2020 04:02:00 PM +07
+mpiu0@vm02:~$ 
+</pre>
 <h2>3. Install NFS</h2>
 <p><p>
-Now that we have the IP addresses setup. I will install NFS where vm02 is the NFS server and vm01 is the client. 
+I will set vm02 to be the NFS server and make vm01 the NFS client 
+for running MPI programs. 
 <p>
 on VM02 (nfs server): <br>
 <pre>
-vm02$ sudo apt update
-vm02$ sudo apt install nfs-kernel-server
-vm02$ sudo mkdir /srv/nfs
-vm02$ sudo vi /etc/exports
-vm02$ cat /etc/exports
+mpiu0@vm02:~$ 
+mpiu0@vm02:~$ sudo apt install nfs-kernel-server
+mpiu0@vm02:~$ mkdir /home/mpiu0/mpidev
+mpiu0@vm02:~$ sudo vi /etc/exports
+mpiu0@vm02:~$ cat /etc/exports
 # /etc/exports: the access control list for filesystems which may be exported
 #		to NFS clients.  See exports(5).
 #
@@ -301,51 +440,26 @@ vm02$ cat /etc/exports
 # /srv/nfs4        gss/krb5i(rw,sync,fsid=0,crossmnt,no_subtree_check)
 # /srv/nfs4/homes  gss/krb5i(rw,sync,no_subtree_check)
 #
-/srv/nfs 192.168.1.221(rw,sync,no_root_squash,no_subtree_check)
-vm02$ 
-vm02$ sudo systemctl restart nfs-kernel-server
-vm02$ sudo ufw allow from 192.168.1.221 to any port nfs
-vm02$ sudo ufw status
+/home/mpiu0/mpidev 192.168.1.221(rw,sync,no_root_squash,no_subtree_check)
+mpiu0@vm02:~$ 
+mpiu0@vm02:~$ sudo systemctl restart nfs-kernel-server
 </pre>
 on VM01 (nfs client): <br>
 <pre>
-vm01$ sudo apt update
-vm01$ sudo apt install nfs-common
-vm01$ sudo mkdir -p /srv/nfs
-vm01$ sudo mount 192.168.1.222:/srv/nfs /srv/nfs
-vm01$ 
-vm01$ 
-vm01$ df -h
-Filesystem              Size  Used Avail Use% Mounted on
-udev                    4.9G     0  4.9G   0% /dev
-tmpfs                   997M  1.2M  996M   1% /run
-/dev/sda2               148G   33G  109G  24% /
-tmpfs                   4.9G     0  4.9G   0% /dev/shm
-tmpfs                   5.0M     0  5.0M   0% /run/lock
-tmpfs                   4.9G     0  4.9G   0% /sys/fs/cgroup
-/dev/loop0               55M   55M     0 100% /snap/core18/1754
-/dev/loop3               72M   72M     0 100% /snap/lxd/16100
-/dev/loop2               72M   72M     0 100% /snap/lxd/16044
-/dev/loop1               55M   55M     0 100% /snap/core18/1880
-/dev/loop4               30M   30M     0 100% /snap/snapd/8542
-/dev/loop5               30M   30M     0 100% /snap/snapd/8140
-tmpfs                   997M   16K  997M   1% /run/user/122
-tmpfs                   997M  4.0K  997M   1% /run/user/1000
-192.168.1.222:/srv/nfs   49G  6.3G   40G  14% /srv/nfs
-$
-vm01$ du -s /srv/nfs
-4	/srv/nfs
-vm01$ 
-vm01$ sudo touch /srv/nfs/kasidit
-vm01$ ls -l /srv/nfs/kasidit
--rw-r--r-- 1 root root 0 Jul 27 11:24 /srv/nfs/kasidit
-vm01$
-</pre>
-Next I will modify /etc/ftab to activate nfs client everytime vm01 is rebooted. 
-Remind that 192.168.1.222 is the IP address of vm02. 
-<pre>
-vm01$ sudo vi /etc/fstab
-vm01$ cat /etc/fstab
+vm01$ su - mpiu0
+Password: 
+mpiu0@vm01:~$ 
+mpiu0@vm01:~$ 
+mpiu0@vm01:~$ sudo apt install nfs-common
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+nfs-common is already the newest version (1:1.3.4-2.5ubuntu3.3).
+0 upgraded, 0 newly installed, 0 to remove and 95 not upgraded.
+mpiu0@vm01:~$ 
+mpiu0@vm01:~$ mkdir /home/mpiu0/mpidev
+mpiu0@vm01:~$ sudo vi /etc/fstab
+mpiu0@vm01:~$ cat /etc/fstab
 # /etc/fstab: static file system information.
 #
 # Use 'blkid' to print the universally unique identifier for a
@@ -356,7 +470,51 @@ vm01$ cat /etc/fstab
 # / was on /dev/sda2 during curtin installation
 /dev/disk/by-uuid/465fdf1a-e858-4139-a8c1-e3c6d7962faf / ext4 defaults 0 0
 /swap.img	none	swap	sw	0	0
-192.168.1.222:/srv/nfs       /srv/nfs      nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
-vm01$ 
-vm01$ sudo reboot
+192.168.1.222:/home/mpiu0/mpidev       /home/mpiu0/mpidev      nfs auto,nofail,noatime,nolock,intr,tcp,actimeo=1800 0 0
+mpiu0@vm01:~$ sudo reboot
 </pre>
+After reboot, login to vm01 and test if nfs is ok. 
+<p>
+On vm01: <br>
+<pre> 
+vm01$ su - mpiu0
+Password: 
+mpiu0@vm01:~$ 
+mpiu0@vm01:~$ 
+mpiu0@vm01:~$ 
+mpiu0@vm01:~$ 
+mpiu0@vm01:~$ df -h
+Filesystem                        Size  Used Avail Use% Mounted on
+udev                              4.9G     0  4.9G   0% /dev
+tmpfs                             997M  1.2M  996M   1% /run
+/dev/sda2                         148G   33G  109G  24% /
+tmpfs                             4.9G     0  4.9G   0% /dev/shm
+tmpfs                             5.0M     0  5.0M   0% /run/lock
+tmpfs                             4.9G     0  4.9G   0% /sys/fs/cgroup
+/dev/loop1                         55M   55M     0 100% /snap/core18/1880
+/dev/loop0                         55M   55M     0 100% /snap/core18/1754
+/dev/loop2                         72M   72M     0 100% /snap/lxd/16100
+/dev/loop3                         30M   30M     0 100% /snap/snapd/8542
+/dev/loop4                         72M   72M     0 100% /snap/lxd/16530
+/dev/loop5                         30M   30M     0 100% /snap/snapd/8140
+tmpfs                             997M   16K  997M   1% /run/user/122
+192.168.1.222:/home/mpiu0/mpidev   49G  6.4G   40G  14% /home/mpiu0/mpidev
+tmpfs                             997M  4.0K  997M   1% /run/user/1000
+mpiu0@vm01:~$ ls
+mpidev
+mpiu0@vm01:~$ cd mpidev
+mpiu0@vm01:~/mpidev$ touch testfile
+mpiu0@vm01:~/mpidev$ ls-l
+ls-l: command not found
+mpiu0@vm01:~/mpidev$ ls -l
+total 0
+-rw-rw-r-- 1 mpiu0 mpiu0 0 Aug  4 16:27 testfile
+mpiu0@vm01:~/mpidev$ 
+</pre>
+On vm02: <br>
+<pre>
+mpiu0@vm02:~$ ls -l mpidev/testfile 
+-rw-rw-r-- 1 mpiu0 mpiu0 0 Aug  4 09:27 mpidev/testfile
+mpiu0@vm02:~$ 
+</pre>
+Then, nfs is ok. 
